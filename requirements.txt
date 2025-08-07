@@ -1,0 +1,5 @@
+Flask==2.3.2
+flask-sqlalchemy==3.0.3
+flask-login==0.6.2
+reportlab==4.0.4  # For PDF generation
+werkzeug==2.3.6

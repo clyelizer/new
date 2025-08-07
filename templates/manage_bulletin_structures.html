@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Bulletin Structures - School Management Platform{% endblock %}
+
+{% block content %}
+<div class="teacher-layout">
+    <nav class="teacher-nav nav flex-column">
+        <a class="nav-link" href="{{ url_for('teacher_interface') }}">
+            <i class="bi bi-card-list"></i> Manage Grades
+        </a>
+        <a class="nav-link active" href="{{ url_for('manage_bulletin_structures') }}">
+            <i class="bi bi-file-earmark-text"></i> Manage Bulletin Structures
+        </a>
+        <a class="nav-link" href="#"> {# Placeholder for future settings page #}
+            <i class="bi bi-gear"></i> Settings
+        </a>
+    </nav>
+
+    <div class="teacher-content">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Manage Bulletin Structures</h3>
+                    </div>
+                    <div class="card-body">
+                        <h4 id="form-title">Add New Structure</h4>
+                        <form method="POST" action="{{ url_for('add_bulletin_structure') }}" class="mb-4 needs-validation" id="bulletin-structure-form" novalidate>
+                            <input type="hidden" name="structure_id" id="structure_id">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="class_name_select" name="school_class_id" required>
+                                            <option value="" disabled selected>Select a class</option>
+                                            {% for sc in school_classes %}
+                                                <option value="{{ sc.id }}">{{ sc.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="class_name_select">Class Name</label>
+                                        <div class="invalid-feedback">Class name is required.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="subjects_part1" name="subjects_part1" placeholder="Subject1,Subject2,..." style="height: 100px" required></textarea>
+                                        <label for="subjects_part1">Subjects Part 1 (comma-separated)</label>
+                                        <div class="invalid-feedback">Subjects for Part 1 are required.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="subjects_part2" name="subjects_part2" placeholder="SubjectA,SubjectB,..." style="height: 100px" required></textarea>
+                                        <label for="subjects_part2">Subjects Part 2 (comma-separated)</label>
+                                        <div class="invalid-feedback">Subjects for Part 2 are required.</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary" id="submit-button">Add Structure</button>
+                                    <button type="button" class="btn btn-secondary d-none" id="cancel-edit-button">Cancel Edit</button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+
+                        <h4>Existing Structures</h4>
+                        {% if structures %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Class Name</th>
+                                        <th>Subjects Part 1</th>
+                                        <th>Subjects Part 2</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for structure in structures %}
+                                    <tr>
+                                        <td>{{ structure.school_class.name if structure.school_class else 'N/A' }}</td>
+                                        <td>{{ structure.subjects_part1 }}</td>
+                                        <td>{{ structure.subjects_part2 }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-warning me-2" 
+                                                    data-bs-toggle="modal" data-bs-target="#editStructureModal"
+                                                    data-id="{{ structure.id }}"
+                                                    data-school-class-id="{{ structure.school_class_id }}" 
+                                                    data-subjects-p1="{{ structure.subjects_part1 }}"
+                                                    data-subjects-p2="{{ structure.subjects_part2 }}">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger delete-structure" data-id="{{ structure.id }}" data-bs-toggle="tooltip" title="Delete"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>No bulletin structures defined yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" id="editStructureModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Structure</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" id="editStructureForm_modal">
+                    <input type="hidden" name="structure_id" id="edit_structure_id">
+                    <div class="mb-3">
+                        <label for="edit_class_name_select" class="form-label">Class Name</label>
+                        <select class="form-select" id="edit_class_name_select" name="school_class_id" required>
+                            <option value="" disabled>Select a class</option>
+                            {% for sc in school_classes %}
+                                <option value="{{ sc.id }}">{{ sc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_subjects_part1" class="form-label">Subjects Part 1 (comma-separated)</label>
+                        <textarea class="form-control" id="edit_subjects_part1" name="subjects_part1" placeholder="Subject1,Subject2,..." style="height: 100px" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_subjects_part2" class="form-label">Subjects Part 2 (comma-separated)</label>
+                        <textarea class="form-control" id="edit_subjects_part2" name="subjects_part2" placeholder="SubjectA,SubjectB,..." style="height: 100px" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update Structure</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Bootstrap form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Delete Structure Logic
+    document.querySelectorAll('.delete-structure').forEach(button => {
+        button.addEventListener('click', function() {
+            const structureId = this.dataset.id;
+            // Attempt to get class name from structure's school_class relationship if available, or fall back.
+            // This requires passing the actual class name or structure object details differently if needed for confirmation.
+            // For simplicity, using a generic confirmation or relying on ID.
+            const linkedClassName = this.closest('tr').querySelector('td:first-child').textContent; // More robust way to get class name from table for confirm message
+            if (confirm(`Are you sure you want to delete the bulletin structure for class "${linkedClassName}" (ID: ${structureId})?`)) {
+                fetch(`/delete_bulletin_structure/${structureId}`, {
+                    method: 'POST', // Flask route expects POST
+                    headers: {
+                        'Content-Type': 'application/json' 
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); 
+                    }
+                    return response.json().then(errData => { 
+                        throw new Error(errData.error || `Server error: ${response.status}`); 
+                    }).catch(() => { 
+                        throw new Error(`Server error: ${response.statusText || response.status}`); 
+                    });
+                })
+                .then(data => {
+                    alert(data.message); 
+                    this.closest('tr').remove();
+                })
+                .catch(error => {
+                    console.error('Delete error:', error);
+                    alert('Error deleting structure: ' + error.message);
+                });
+            }
+        });
+    });
+
+    // Edit Structure Modal Logic
+    const editModalEl = document.getElementById('editStructureModal');
+    if (editModalEl) { // Ensure modal element exists
+        // const editModal = new bootstrap.Modal(editModalEl); // Instance already created by data-bs-toggle or can be created here if needed.
+
+        editModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const structureId = button.getAttribute('data-id');
+            const schoolClassId = button.getAttribute('data-school-class-id');
+            const subjectsP1 = button.getAttribute('data-subjects-p1');
+            const subjectsP2 = button.getAttribute('data-subjects-p2');
+
+            const modalTitle = editModalEl.querySelector('.modal-title');
+            const structureIdInput = editModalEl.querySelector('#edit_structure_id'); 
+            const classNameSelect = editModalEl.querySelector('#edit_class_name_select'); 
+            const subjectsP1Input = editModalEl.querySelector('#edit_subjects_part1'); 
+            const subjectsP2Input = editModalEl.querySelector('#edit_subjects_part2'); 
+            const form = editModalEl.querySelector('#editStructureForm_modal'); 
+
+            if (modalTitle) modalTitle.textContent = 'Edit Bulletin Structure';
+            if (structureIdInput) structureIdInput.value = structureId;
+            if (classNameSelect) classNameSelect.value = schoolClassId; // Set the select value
+            if (subjectsP1Input) subjectsP1Input.value = subjectsP1;
+            if (subjectsP2Input) subjectsP2Input.value = subjectsP2;
+            if (form) {
+                form.action = "{{ url_for('edit_bulletin_structure', structure_id=0) }}".replace('0', structureId); 
+            } else {
+                console.error("Edit form (#editStructureForm_modal) not found in modal!");
+            }
+        });
+    }
+
+
+    // Logic for the main "Add New Structure" form (clearing, etc.)
+    // This part refers to the main form, not the modal.
+    const mainStructureForm = document.getElementById('bulletin-structure-form');
+    const mainFormTitle = document.getElementById('form-title');
+    const mainSubmitButton = document.getElementById('submit-button');
+    const mainCancelEditButton = document.getElementById('cancel-edit-button'); // Belongs to main form's old inline edit
+    
+    // If mainCancelEditButton exists and is part of an old inline edit pattern for the main form:
+    if (mainCancelEditButton && mainStructureForm && mainFormTitle && mainSubmitButton) {
+        const originalMainFormAction = mainStructureForm.action;
+        const originalMainSubmitButtonText = mainSubmitButton.textContent;
+        const originalMainFormTitle = mainFormTitle.textContent;
+
+        mainCancelEditButton.addEventListener('click', function() {
+            mainFormTitle.textContent = originalMainFormTitle;
+            mainStructureForm.action = originalMainFormAction;
+            mainSubmitButton.textContent = originalMainSubmitButtonText;
+            mainCancelEditButton.classList.add('d-none');
+            
+            // Clear the structure_id from the main form if it was polluted
+            const mainStructureIdField = mainStructureForm.querySelector('input[name="structure_id"]');
+            if(mainStructureIdField) mainStructureIdField.value = ''; 
+            mainStructureForm.reset(); 
+            mainStructureForm.classList.remove('was-validated'); 
+        });
+    }
+});
+
+</script>
+{% endblock %} 

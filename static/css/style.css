@@ -1,0 +1,110 @@
+/* Global styles */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Card styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Table styles */
+.table {
+    background-color: white;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+/* Form styles */
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button styles */
+.btn-primary {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+/* Vertical Navigation for Teacher Interface */
+.teacher-layout {
+    display: flex;
+}
+
+.teacher-nav {
+    width: 250px; /* Adjust as needed */
+    min-height: calc(100vh - 56px); /* Adjust 56px based on your top navbar height */
+    background-color: #343a40; /* Dark background */
+    padding-top: 20px;
+    color: white;
+}
+
+.teacher-nav .nav-link {
+    color: #adb5bd; /* Light grey text */
+    padding: 10px 15px;
+    border-left: 3px solid transparent;
+}
+
+.teacher-nav .nav-link:hover, 
+.teacher-nav .nav-link.active {
+    color: white;
+    background-color: #495057; /* Slightly lighter background on hover/active */
+    border-left-color: #0d6efd; /* Bootstrap primary blue for active indicator */
+}
+
+.teacher-nav .nav-link i {
+    margin-right: 10px;
+}
+
+.teacher-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto; /* Add scroll if content is too long */
+}
+
+/* Ensure footer (if any) is below the flex layout */
+.footer {
+    flex-shrink: 0;
+}
+
+/* Responsive adjustments for vertical nav */
+@media (max-width: 992px) { /* Collapse nav on medium screens and below */
+    .teacher-nav {
+        width: 100%;
+        min-height: auto;
+        /* You might want to implement a toggle button and hide it by default */
+        /* display: none; */ 
+    }
+    .teacher-layout {
+        flex-direction: column;
+    }
+}

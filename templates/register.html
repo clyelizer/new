@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Register - School Management Platform{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleFields() {
+    const roleSelect = document.getElementById('role');
+    const teacherCodeDiv = document.getElementById('teacher-code-div');
+    const teacherCodeInput = document.getElementById('teacher_code');
+    const studentClassDiv = document.getElementById('student-class-div');
+    const classIdSelect = document.getElementById('class_id');
+
+    if (roleSelect.value === 'teacher') {
+        teacherCodeDiv.classList.remove('d-none');
+        teacherCodeInput.required = true;
+
+        studentClassDiv.classList.add('d-none');
+        classIdSelect.required = false;
+        classIdSelect.value = '';
+    } else { // Student (or other roles if any in the future)
+        teacherCodeDiv.classList.add('d-none');
+        teacherCodeInput.required = false;
+        teacherCodeInput.value = '';
+
+        studentClassDiv.classList.remove('d-none');
+        classIdSelect.required = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    roleSelect.addEventListener('change', toggleFields);
+    // Initial call to set correct fields on page load
+    toggleFields();
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Registration</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="student" selected>Student</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                        <label for="role">Role</label>
+                    </div>
+
+                    <div class="form-floating mb-3 d-none" id="teacher-code-div">
+                        <input type="password" class="form-control" id="teacher_code" name="teacher_code" placeholder="Teacher Registration Code">
+                        <label for="teacher_code">Teacher Registration Code</label>
+                        <div class="invalid-feedback">Invalid teacher code.</div>
+                    </div>
+                    
+                    <div class="form-floating mb-3" id="student-class-div">
+                        <select class="form-select" id="class_id" name="class_id">
+                            <option value="">Select Class...</option>
+                            {% if school_classes %}
+                                {% for school_class in school_classes %}
+                                <option value="{{ school_class.id }}">{{ school_class.name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <label for="class_id">Class</label>
+                        <div class="invalid-feedback">Please select a class for the student.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

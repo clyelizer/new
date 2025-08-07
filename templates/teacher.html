@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard - School Management Platform{% endblock %}
+
+{% block content %}
+<div class="teacher-layout">
+    <nav class="teacher-nav nav flex-column">
+        <a class="nav-link active" href="{{ url_for('teacher_interface') }}">
+            <i class="bi bi-card-list"></i> Manage Grades
+        </a>
+        <a class="nav-link" href="{{ url_for('manage_bulletin_structures') }}">
+            <i class="bi bi-file-earmark-text"></i> Manage Bulletin Structures
+        </a>
+        <a class="nav-link" href="#">
+            <i class="bi bi-gear"></i> Settings
+        </a>
+        {# Add more links as needed #}
+    </nav>
+
+    <div class="teacher-content">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3>Welcome, {{ current_user.username }}</h3>
+                            <div class="col-md-4 col-lg-3">
+                                <form method="GET" action="{{ url_for('teacher_interface') }}" id="class-filter-form">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="class_filter" name="class_name" onchange="document.getElementById('class-filter-form').submit();">
+                                            <option value="">All Classes (All Students)</option>
+                                            {% for class_name_item in defined_classes %}
+                                            <option value="{{ class_name_item }}" {% if class_name_item == selected_class_name %}selected{% endif %}>{{ class_name_item }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="class_filter">Filter by Class</label>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h3>Add New Grade</h3>
+                        <form method="POST" action="{{ url_for('add_grade') }}" class="mb-4">
+                            <input type="hidden" name="selected_class_for_grade" value="{{ selected_class_name or '' }}">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label for="student" class="form-label">Student</label>
+                                    <select class="form-select" id="student" name="student_id" required>
+                                        <option value="">Select student...</option>
+                                        {% for student_item in students %} {# Renamed student to student_item #}
+                                        <option value="{{ student_item.id }}">{{ student_item.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <select class="form-select" id="subject" name="subject" required>
+                                        <option value="">Select subject...</option>
+                                        {% if selected_class_name and subjects_for_selected_class %}
+                                            {% for subj in subjects_for_selected_class %}
+                                            <option value="{{ subj }}">{{ subj }}</option>
+                                            {% endfor %}
+                                            <option value="Other">Other (Specify)</option> {# Kept 'Other' option #}
+                                        {% else %}
+                                            {# Fallback or general list if no class selected or no specific subjects defined #}
+                                            <option value="MATHS">MATHS</option>
+                                            <option value="PHYSIQUE">PHYSIQUE</option>
+                                            <option value="CHIMIE">CHIMIE</option>
+                                            <option value="GÉOLOGIE/BIO">GÉOLOGIE/BIO</option>
+                                            <option value="PHILOSOPHIE">PHILOSOPHIE</option>
+                                            <option value="ANGLAIS">ANGLAIS</option>
+                                            <option value="E.C.M">E.C.M</option>
+                                            <option value="EPS">EPS</option>
+                                            <option value="INFORMAT.">INFORMAT.</option>
+                                            <option value="DESSIN TECH.">DESSIN TECH.</option>
+                                            <option value="CONDUITE">CONDUITE</option>
+                                            <option value="Other">Other</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2" id="other_subject_input_div" style="display: none;">
+                                    <label for="other_subject_name_input" class="form-label">Other Subject Name</label>
+                                    <input type="text" class="form-control" id="other_subject_name_input" name="other_subject_name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="period_select" class="form-label">Period</label>
+                                    <select class="form-select" id="period_select" name="period" required>
+                                        <option value="">Select period...</option>
+                                        {% for p in standard_periods %}
+                                        <option value="{{ p }}">{{ p }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-3 align-items-end mt-2">
+                                <div class="col-md-2">
+                                    <label for="moy_cl" class="form-label">Moy.CL</label>
+                                    <input type="number" step="0.01" class="form-control" id="moy_cl" name="moy_cl" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="n_compo" class="form-label">N.Compo</label>
+                                    <input type="number" step="0.01" class="form-control" id="n_compo" name="n_compo" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="coef" class="form-label">Coef</label>
+                                    <input type="number" class="form-control" id="coef" name="coef" required>
+                                </div>
+                                <div class="col-md-3 align-self-end">
+                                    <button type="submit" class="btn btn-primary w-100">Add Grade</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <h4>All Grades {% if selected_class_name %}(Class: {{ selected_class_name }}){% endif %}</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Subject</th>
+                                        <th>Period</th>
+                                        <th>Moy.CL</th>
+                                        <th>N.Compo</th>
+                                        <th>Coef</th>
+                                        <th>Date Modif.</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for grade in grades %}
+                                    <tr id="grade-row-{{ grade.id }}">
+                                        <td>{{ grade.student.username }}</td>
+                                        <td>{{ grade.subject }}</td>
+                                        <td>{{ grade.period }}</td>
+                                        <td>{{ "%.2f"|format(grade.moy_cl|float) }}</td>
+                                        <td>{{ "%.2f"|format(grade.n_compo|float) }}</td>
+                                        <td>{{ grade.coef }}</td>
+                                        <td>{{ grade.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-grade"
+                                                    data-grade-id="{{ grade.id }}"
+                                                    data-period="{{ grade.period }}"
+                                                    data-moy-cl="{{ grade.moy_cl }}"
+                                                    data-n-compo="{{ grade.n_compo }}"
+                                                    data-coef="{{ grade.coef }}"
+                                                    data-subject="{{ grade.subject }}"
+                                                    data-bs-toggle="tooltip" title="Edit grade">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger delete-grade" data-grade-id="{{ grade.id }}"
+                                                data-bs-toggle="tooltip" title="Delete grade">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Includes scripts from base.html if any #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const classFilterSubmitted = urlParams.has('class_name');
+    const addGradeForm = document.querySelector('form[action="{{ url_for("add_grade") }}"]');
+
+    // --- Helper functions for conditional inputs ---
+    const subjectSelect = document.getElementById('subject');
+    const otherSubjectInputDiv = document.getElementById('other_subject_input_div');
+    const otherSubjectNameInput = document.getElementById('other_subject_name_input');
+
+    function handleSubjectChange() {
+        if (subjectSelect && otherSubjectInputDiv && otherSubjectNameInput) {
+            if (subjectSelect.value === 'Other') {
+                otherSubjectInputDiv.classList.remove('d-none');
+                otherSubjectNameInput.required = true;
+                otherSubjectNameInput.disabled = false;
+            } else {
+                otherSubjectInputDiv.classList.add('d-none');
+                otherSubjectNameInput.required = false;
+                otherSubjectNameInput.disabled = true;
+                otherSubjectNameInput.value = ''; 
+            }
+        }
+    }
+
+    // const periodSelect = document.getElementById('period_select'); // Already declared if needed for localStorage
+    // const newPeriodInputDiv = document.getElementById('new_period_input_div'); // Removed
+    // const newPeriodNameInput = document.getElementById('new_period_name'); // Removed
+
+    // function handlePeriodChange() { // Removed
+    //     if (periodSelect && newPeriodInputDiv && newPeriodNameInput) {
+    //         if (periodSelect.value === '__new__') {
+    //             newPeriodInputDiv.classList.remove('d-none');
+    //             newPeriodNameInput.required = true;
+    //             newPeriodNameInput.disabled = false;
+    //         } else {
+    //             newPeriodInputDiv.classList.add('d-none');
+    //             newPeriodNameInput.required = false;
+    //             newPeriodNameInput.disabled = true;
+    //             newPeriodNameInput.value = '';
+    //         }
+    //     }
+    // }
+
+    // Initial setup for conditional inputs
+    if (subjectSelect) subjectSelect.addEventListener('change', handleSubjectChange);
+    // if (periodSelect) periodSelect.addEventListener('change', handlePeriodChange); // Removed
+    handleSubjectChange(); 
+    // handlePeriodChange(); // Removed
+    
+    // --- Restore form fields and clear numeric inputs on page load ---
+    if (addGradeForm && !classFilterSubmitted) {
+        document.getElementById('moy_cl').value = '';
+        document.getElementById('n_compo').value = '';
+        document.getElementById('coef').value = '';
+
+        const storedStudentId = localStorage.getItem('selectedStudentId');
+        const studentDropdown = document.getElementById('student');
+        if (storedStudentId && studentDropdown) {
+            studentDropdown.value = storedStudentId;
+        }
+
+        // Restore Period (simpler now)
+        const periodDropdown = document.getElementById('period_select'); // Use this ID
+        const storedPeriodValue = localStorage.getItem('selectedPeriod'); // Simplified storage key
+        if (storedPeriodValue && periodDropdown) {
+            periodDropdown.value = storedPeriodValue;
+            // No need to call handlePeriodChange as it's removed
+        }
+
+        // Restore Subject
+        const storedSubjectType = localStorage.getItem('selectedSubjectType');
+        const storedSubjectValue = localStorage.getItem('selectedSubjectValue');
+        if (storedSubjectValue && subjectSelect) {
+            if (storedSubjectType === 'Other' && otherSubjectNameInput) {
+                subjectSelect.value = 'Other';
+                otherSubjectNameInput.value = storedSubjectValue;
+            } else {
+                subjectSelect.value = storedSubjectValue;
+            }
+            handleSubjectChange();
+        }
+
+        // Clear localStorage after use
+        localStorage.removeItem('selectedStudentId');
+        // localStorage.removeItem('selectedPeriodType'); // Removed
+        localStorage.removeItem('selectedPeriod'); // Adjusted key
+        localStorage.removeItem('selectedSubjectType');
+        localStorage.removeItem('selectedSubjectValue');
+    }
+
+    // --- Store selected values in localStorage before form submission ---
+    if (addGradeForm) {
+        addGradeForm.addEventListener('submit', function(event) {
+            // Ensure correct state of conditional fields before processing submission data
+            // handlePeriodChange(); // Removed
+            handleSubjectChange();
+
+            if (studentDropdown && studentDropdown.value) { // studentDropdown is already defined above
+                localStorage.setItem('selectedStudentId', studentDropdown.value);
+            }
+
+            const currentPeriodDropdown = document.getElementById('period_select'); // Get it here for clarity
+            if (currentPeriodDropdown && currentPeriodDropdown.value) { // Simplified period storage
+                localStorage.setItem('selectedPeriod', currentPeriodDropdown.value);
+            }
+
+            // Keep subject storage as is, it handles 'Other' correctly
+            if (subjectSelect) { // subjectSelect is already defined
+                let subjectValueToStore = subjectSelect.value;
+                let subjectTypeToStore = subjectSelect.value === 'Other' ? 'Other' : 'existing';
+
+                if (subjectTypeToStore === 'Other' && otherSubjectNameInput) {
+                    subjectValueToStore = otherSubjectNameInput.value.trim();
+                }
+                 if(subjectValueToStore) localStorage.setItem('selectedSubjectValue', subjectValueToStore);
+                localStorage.setItem('selectedSubjectType', subjectTypeToStore);
+            }
+        });
+    }
+
+    // --- Edit Grade Logic ---
+    document.querySelectorAll('.edit-grade').forEach(button => {
+        button.addEventListener('click', function() {
+            const gradeId = this.dataset.gradeId;
+            const subject = this.dataset.subject; 
+            let currentPeriod = this.dataset.period;
+            let currentMoyCl = parseFloat(this.dataset.moyCl);
+            let currentNCompo = parseFloat(this.dataset.nCompo);
+            let currentCoef = parseInt(this.dataset.coef);
+
+            const newPeriod = prompt(`Enter Period for ${subject} (current: "${currentPeriod}"):`, currentPeriod);
+            if (newPeriod === null) return;
+            const newMoyCl = prompt(`Enter Moy.CL for ${subject} (current: ${currentMoyCl}):`, currentMoyCl);
+            if (newMoyCl === null) return;
+            const newNCompo = prompt(`Enter N.Compo for ${subject} (current: ${currentNCompo}):`, currentNCompo);
+            if (newNCompo === null) return;
+            const newCoef = prompt(`Enter Coef for ${subject} (current: ${currentCoef}):`, currentCoef);
+            if (newCoef === null) return;
+
+            fetch(`/update_grade/${gradeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    period: newPeriod,
+                    moy_cl: parseFloat(newMoyCl),
+                    n_compo: parseFloat(newNCompo),
+                    coef: parseInt(newCoef)
+                })
+            }).then(response => {
+                if (response.ok) return response.json();
+                return response.json().then(errData => { throw new Error(errData.error || `Server error: ${response.status}`); });
+            }).then(data => {
+                alert(data.message);
+                const row = document.getElementById(`grade-row-${gradeId}`);
+                if (row) {
+                    row.cells[2].textContent = newPeriod;
+                    row.cells[3].textContent = parseFloat(newMoyCl).toFixed(2);
+                    row.cells[4].textContent = parseFloat(newNCompo).toFixed(2);
+                    row.cells[5].textContent = parseInt(newCoef);
+                }
+            }).catch(error => {
+                console.error('Update error:', error);
+                alert('Error updating grade: ' + error.message);
+            });
+        });
+    });
+
+    // --- Delete Grade Logic ---
+    document.querySelectorAll('.delete-grade').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this grade?')) {
+                const gradeId = this.dataset.gradeId;
+                fetch(`/delete_grade/${gradeId}`, {
+                    method: 'DELETE'
+                }).then(response => {
+                    if (response.ok) {
+                        document.getElementById(`grade-row-${gradeId}`).remove();
+                        alert('Grade deleted successfully');
+                    } else {
+                         response.json().then(errData => { alert('Error deleting grade: ' + (errData.error || 'Unknown error')); })
+                         .catch(() => { alert('Error deleting grade: Server error'); });
+                    }
+                }).catch(error => {
+                    console.error('Delete error:', error);
+                    alert('Error deleting grade: ' + error.message);
+                });
+            }
+        });
+    });
+    
+    // --- Tooltips ---
+    const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

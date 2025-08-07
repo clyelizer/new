@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - School Management Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Welcome, {{ current_user.username }}</h3>
+            </div>
+            <div class="card-body">
+                <h4>Your Grades</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Grade</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>{{ grade.subject }}</td>
+                                <td>{{ grade.grade }}</td>
+                                <td>{{ grade.date.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Grade Statistics</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Download Reports</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('generate_report') }}" class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download"></i> Download Report Card (PDF)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

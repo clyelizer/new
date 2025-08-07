@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Manage School Classes - School Management Platform{% endblock %}
+
+{% block content %}
+<div class="teacher-layout">
+    <nav class="teacher-nav nav flex-column">
+        <a class="nav-link" href="{{ url_for('teacher_interface') }}">
+            <i class="bi bi-card-list"></i> Manage Grades
+        </a>
+        <a class="nav-link" href="{{ url_for('manage_bulletin_structures') }}">
+            <i class="bi bi-file-earmark-text"></i> Manage Bulletin Structures
+        </a>
+        <a class="nav-link active" href="{{ url_for('manage_school_classes') }}">
+            <i class="bi bi-house-door-fill"></i> Manage School Classes
+        </a>
+        <a class="nav-link" href="#"> {# Placeholder for future settings page #}
+            <i class="bi bi-gear"></i> Settings
+        </a>
+    </nav>
+
+    <div class="teacher-content">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Manage School Classes</h3>
+                    </div>
+                    <div class="card-body">
+                        <h4>Add New Class</h4>
+                        <form method="POST" action="{{ url_for('add_school_class') }}" class="mb-4 needs-validation" novalidate>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="class_name" name="class_name" placeholder="Class Name" required>
+                                        <label for="class_name">Class Name (e.g., Terminale C)</label>
+                                        <div class="invalid-feedback">Class name is required.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">Add Class</button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+
+                        <h4>Existing Classes</h4>
+                        {% if classes %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Class Name</th>
+                                        <th>Number of Students</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cls in classes %}
+                                    <tr>
+                                        <td>{{ cls.id }}</td>
+                                        <td>{{ cls.name }}</td>
+                                        <td>{{ cls.students.count() }}</td> {# Counts students in this class #}
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-class disabled" data-id="{{ cls.id }}" data-name="{{ cls.name }}" data-bs-toggle="tooltip" title="Edit (To be implemented)"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-danger delete-class disabled" data-id="{{ cls.id }}" data-bs-toggle="tooltip" title="Delete (To be implemented - careful with students)"><i class="bi bi-trash"></i></button>
+                                            <a href="{{ url_for('assign_students_to_class_interface', class_id=cls.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Assign Students (To be implemented)"><i class="bi bi-people-fill"></i> Assign Students</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>No school classes defined yet. Add one above.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Bootstrap form validation (same as other pages)
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+// Tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // TODO: Add JS for Edit/Delete Class functionality if needed (or handle via separate pages/modals)
+});
+</script>
+{% endblock %} 
